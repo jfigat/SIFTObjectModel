@@ -17,7 +17,8 @@
 #include <opencv2/nonfree/features2d.hpp>
 #endif
 #elif CV_MAJOR_VERSION == 3
-#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv2/xfeatures2d.hpp>
 #endif
 
 namespace Processors {
@@ -78,6 +79,7 @@ void xyzrgb2xyzsift::compute() {
 
     std::vector<cv::KeyPoint> keypoints;
     cv::Mat descriptors;
+    /*if (CV_MAJOR_VERSION < 3)
     try {
         //-- Step 1: Detect the keypoints.
         cv::SiftFeatureDetector detector;
@@ -89,7 +91,21 @@ void xyzrgb2xyzsift::compute() {
 
         extractor.compute( rgbimg, keypoints, descriptors);
     } catch (...) {
-        LOG(LERROR) << "sdasdas\n";
+        LOG(LERROR) << "SIFT features (OpenCV 2.4) - error\n";
+    }*/
+    if (CV_MAJOR_VERSION == 3)
+    try {
+        cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SIFT::create();
+        //cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SURF::create();
+        //cv::Ptr<cv::Feature2D> f2d = cv::ORB::create();
+
+        //-- Step 1: Detect the keypoints.
+        f2d->detect( rgbimg, keypoints );
+
+        //-- Step 2: Calculate descriptors (feature vectors).
+        f2d->compute( rgbimg, keypoints, descriptors );
+    } catch (...) {
+        LOG(LERROR) << "SIFT features (OpenCV 3.1) - error\n";
     }
 
     pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift(new pcl::PointCloud<PointXYZSIFT>);
